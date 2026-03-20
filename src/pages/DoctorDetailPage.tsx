@@ -5,7 +5,7 @@ import ScrollReveal from "@/components/ui/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import { Star, MapPin, GraduationCap, Clock, CalendarDays, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
 function getInitials(name: string) {
