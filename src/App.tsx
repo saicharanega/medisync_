@@ -10,9 +10,23 @@ import DoctorDetailPage from "./pages/DoctorDetailPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import MyAppointmentsPage from "./pages/MyAppointmentsPage";
-import DoctorDashboard from "./pages/DoctorDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+
+// Doctor Portal
+import DoctorPortalLayout from "./components/layout/DoctorPortalLayout";
+import DoctorOverview from "./pages/doctor/DoctorOverview";
+import DoctorAppointments from "./pages/doctor/DoctorAppointments";
+import DoctorAvailability from "./pages/doctor/DoctorAvailability";
+import DoctorEarnings from "./pages/doctor/DoctorEarnings";
+import DoctorProfile from "./pages/doctor/DoctorProfile";
+
+// Admin Portal
+import AdminPortalLayout from "./components/layout/AdminPortalLayout";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminDoctors from "./pages/admin/AdminDoctors";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminAppointments from "./pages/admin/AdminAppointments";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -24,14 +38,32 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Public / Patient routes */}
             <Route path="/" element={<Index />} />
             <Route path="/doctors" element={<DoctorsPage />} />
             <Route path="/doctors/:id" element={<DoctorDetailPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/my-appointments" element={<MyAppointmentsPage />} />
-            <Route path="/doctor-dashboard" element={<DoctorDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+
+            {/* Doctor Portal */}
+            <Route path="/doctor-dashboard" element={<DoctorPortalLayout />}>
+              <Route index element={<DoctorOverview />} />
+              <Route path="appointments" element={<DoctorAppointments />} />
+              <Route path="availability" element={<DoctorAvailability />} />
+              <Route path="earnings" element={<DoctorEarnings />} />
+              <Route path="profile" element={<DoctorProfile />} />
+            </Route>
+
+            {/* Admin Portal */}
+            <Route path="/admin" element={<AdminPortalLayout />}>
+              <Route index element={<AdminOverview />} />
+              <Route path="doctors" element={<AdminDoctors />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="appointments" element={<AdminAppointments />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
