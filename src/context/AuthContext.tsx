@@ -1,3 +1,4 @@
+// Auth context for MediSync
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { User, UserRole } from "@/types";
 
