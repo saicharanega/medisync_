@@ -21,8 +21,8 @@ const seedData = async () => {
     console.log('Cleared existing data.');
 
     // Create Admin and Patient
-    await User.create({ name: 'Admin', email: 'admin@medisync.com', password: 'password123', role: 'admin' });
-    const patient = await User.create({ name: 'Alex Rivera', email: 'alex@example.com', password: 'password123', role: 'patient' });
+    await User.create({ name: 'Admin', email: 'admin@medisync.com', password: '123456', role: 'admin' });
+    const patient = await User.create({ name: 'Bulli Raju', email: 'bulliraju@medisync.com', password: 'password123', role: 'patient' });
 
     // Seed Doctors
     for (let doc of doctors) {

@@ -105,7 +105,9 @@ export default function LoginPage() {
 
             <div className="text-center text-sm text-muted-foreground pt-2">
               <p className="mb-2">
-                Demo logins: use <strong>alex@example.com</strong> (patient), <strong>sarah.mitchell@medisync.com</strong> (doctor), or <strong>admin@medisync.com</strong> (admin) with any password.
+                Demo emails: <strong>alex@example.com</strong> (patient), <strong>sarah.mitchell@medisync.com</strong> (doctor), or <strong>admin@medisync.com</strong> (admin).
+                <br/>
+                <em>Note: Use the actual seeded passwords (e.g. 123456 for admin, password123 for others).</em>
               </p>
               <p>
                 Don't have an account?{" "}
