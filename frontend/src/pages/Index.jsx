@@ -1,27 +1,40 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { doctors } from "@/data/doctors";
 import DoctorCard from "@/components/doctors/DoctorCard";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { Search, Shield, CalendarCheck, CreditCard, Star, ArrowRight } from "lucide-react";
 import Layout from "@/components/layout/Layout";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const stats = [
-{ label: "Active Doctors", value: "148" },
-{ label: "Appointments Booked", value: "12,340" },
-{ label: "Patient Satisfaction", value: "97.3%" },
-{ label: "Specializations", value: "24" }];
-
+  { label: "Active Doctors", value: "148" },
+  { label: "Appointments Booked", value: "12,340" },
+  { label: "Patient Satisfaction", value: "97.3%" },
+  { label: "Specializations", value: "24" }
+];
 
 const steps = [
-{ icon: Search, title: "Find a Doctor", desc: "Browse specialists or search by condition. Filter by rating, experience, and availability." },
-{ icon: CalendarCheck, title: "Book a Slot", desc: "Pick a date and time that works for you. Real-time availability with instant confirmation." },
-{ icon: CreditCard, title: "Pay Securely", desc: "Complete payment through our encrypted gateway. Your health data stays private." },
-{ icon: Shield, title: "Get Care", desc: "Show up for your appointment. Receive follow-up notes and prescriptions digitally." }];
-
+  { icon: Search, title: "Find a Doctor", desc: "Browse specialists or search by condition. Filter by rating, experience, and availability." },
+  { icon: CalendarCheck, title: "Book a Slot", desc: "Pick a date and time that works for you. Real-time availability with instant confirmation." },
+  { icon: CreditCard, title: "Pay Securely", desc: "Complete payment through our encrypted gateway. Your health data stays private." },
+  { icon: Shield, title: "Get Care", desc: "Show up for your appointment. Receive follow-up notes and prescriptions digitally." }
+];
 
 export default function Index() {
-  const featured = doctors.slice(0, 4);
+  const [featured, setFeatured] = useState([]);
+
+  useEffect(() => {
+    axios.get('/api/doctors')
+      .then(res => {
+        const formatted = res.data.map(d => ({
+          ...d,
+          name: d.userId?.name || 'Unknown Doctor',
+        }));
+        setFeatured(formatted.slice(0, 4));
+      })
+      .catch(console.error);
+  }, []);
 
   return (
     <Layout>

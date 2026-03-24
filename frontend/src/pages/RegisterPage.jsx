@@ -5,14 +5,25 @@ import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout/Layout";
 import { Heart, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { GoogleLogin } from '@react-oauth/google';
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
-  const { register } = useAuth();
+  const { register, googleLogin } = useAuth();
   const navigate = useNavigate();
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    const res = await googleLogin(credentialResponse.credential);
+    if (res) {
+      toast.success("Successfully authenticated with Google!");
+      if (res.role === 'admin') navigate("/admin");
+      else if (res.role === 'doctor') navigate("/doctor-dashboard");
+      else navigate("/");
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -53,7 +64,28 @@ export default function RegisterPage() {
               </div>
             </div>
             <Button type="submit" className="w-full" size="lg">Create Account</Button>
-            <p className="text-center text-sm text-muted-foreground">
+            
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
+              </div>
+            </div>
+            
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error('Google Sign-In Failed')}
+                theme="filled_black"
+                shape="rectangular"
+                text="signup_with"
+                size="large"
+              />
+            </div>
+
+            <p className="text-center text-sm text-muted-foreground pt-4">
               Already have an account? <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
             </p>
           </form>

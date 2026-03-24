@@ -56,7 +56,7 @@ export default function DoctorCard({ doctor }) {
             <span className="text-xs text-muted-foreground ml-1">/ visit</span>
           </div>
           <Button asChild size="sm">
-            <Link to={`/doctors/${doctor.id}`}>Book Now</Link>
+            <Link to={`/doctors/${doctor._id || doctor.id}`}>Book Now</Link>
           </Button>
         </div>
       </div>

@@ -1,38 +1,70 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 import { AuthContext } from "./auth-context";
-
-
-const mockUsers = {
-  patient: { id: "user-1", name: "Alex Rivera", email: "alex@example.com", role: "patient", phone: "+1 555-0142" },
-  doctor: { id: "dr-1", name: "Dr. Sarah Mitchell", email: "sarah@medisync.com", role: "doctor" },
-  admin: { id: "admin-1", name: "Admin", email: "admin@medisync.com", role: "admin" }
-};
+import axios from "axios";
+import { toast } from "sonner";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
-  const login = useCallback((email, _password, role) => {
-    const targetRole = role || (email.includes("admin") ? "admin" : email.includes("doctor") || email.includes("dr") ? "doctor" : "patient");
-    const mockUser = mockUsers[targetRole] || mockUsers.patient;
-    setUser({ ...mockUser, email });
-    return true;
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      axios.get("/api/auth/me", { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => setUser({ ...res.data, token }))
+        .catch(() => localStorage.removeItem("token"));
+    }
   }, []);
 
-  const register = useCallback((name, email, _password) => {
-    setUser({ id: `user-${Date.now()}`, name, email, role: "patient" });
-    return true;
+  const login = useCallback(async (email, password) => {
+    try {
+      const res = await axios.post("/api/auth/login", { email, password });
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data);
+      return res.data;
+    } catch (err) {
+      console.error(err);
+      toast?.error(err.response?.data?.message || "Login failed");
+      return null;
+    }
   }, []);
 
-  const logout = useCallback(() => setUser(null), []);
+  const register = useCallback(async (name, email, password) => {
+    try {
+      const res = await axios.post("/api/auth/register", { name, email, password, role: "patient" });
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data);
+      return res.data;
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }, []);
 
-  const switchRole = useCallback((role) => {
-    const mockUser = mockUsers[role];
-    if (mockUser) setUser(mockUser);
+  const googleLogin = useCallback(async (token) => {
+    try {
+      const res = await axios.post("/api/auth/google", { token });
+      localStorage.setItem("token", res.data.token);
+      setUser(res.data);
+      return res.data;
+    } catch (err) {
+      console.error(err);
+      toast?.error(err.response?.data?.message || "Google authentication failed");
+      return null;
+    }
+  }, []);
+
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    setUser(null);
+  }, []);
+
+  const switchRole = useCallback(() => {
+    console.warn("switchRole is disabled in production MERN mode.");
   }, []);
 
   const value = useMemo(
-    () => ({ user, isAuthenticated: !!user, login, register, logout, switchRole }),
-    [user, login, register, logout, switchRole]
+    () => ({ user, isAuthenticated: !!user, login, register, googleLogin, logout, switchRole }),
+    [user, login, register, googleLogin, logout, switchRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,13 +1,34 @@
-import { useState, useMemo } from "react";
-import { doctors, specializations } from "@/data/doctors";
+import { useState, useMemo, useEffect } from "react";
+import { specializations } from "@/data/doctors";
+import axios from "axios";
 import DoctorCard from "@/components/doctors/DoctorCard";
 import Layout from "@/components/layout/Layout";
 import ScrollReveal from "@/components/ui/ScrollReveal";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 
 export default function DoctorsPage() {
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [spec, setSpec] = useState("All");
+
+  useEffect(() => {
+    axios.get('/api/doctors')
+      .then(res => {
+        // Map backend returned objects to uniform frontend structure
+        const formatted = res.data.map(d => ({
+          ...d,
+          name: d.userId?.name || 'Unknown Doctor',
+          email: d.userId?.email
+        }));
+        setDoctors(formatted);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
 
   const filtered = useMemo(() => {
     return doctors.filter((d) => {
@@ -15,7 +36,7 @@ export default function DoctorsPage() {
       const matchSearch = d.name.toLowerCase().includes(search.toLowerCase()) || d.specialization.toLowerCase().includes(search.toLowerCase());
       return matchSpec && matchSearch;
     });
-  }, [search, spec]);
+  }, [doctors, search, spec]);
 
   return (
     <Layout>

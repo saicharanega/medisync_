@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/context/auth-provider";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Index from "./pages/Index";
 import DoctorsPage from "./pages/DoctorsPage";
 import DoctorDetailPage from "./pages/DoctorDetailPage";
@@ -30,11 +31,14 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 const queryClient = new QueryClient();
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "563456789-mockplaceholder.apps.googleusercontent.com";
+
 const App = () =>
 <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
         <Sonner />
         <BrowserRouter>
           <Routes>
@@ -69,7 +73,7 @@ const App = () =>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
-  </QueryClientProvider>;
-
+  </GoogleOAuthProvider>
+</QueryClientProvider>;
 
 export default App;

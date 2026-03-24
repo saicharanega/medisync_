@@ -1,32 +1,62 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { doctors } from "@/data/doctors";
 import Layout from "@/components/layout/Layout";
 import ScrollReveal from "@/components/ui/ScrollReveal";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, GraduationCap, Clock, CalendarDays, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { Star, MapPin, GraduationCap, Clock, CalendarDays, CheckCircle2, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import axios from "axios";
 
 function getInitials(name) {
+  if (!name) return "DR";
   return name.replace("Dr. ", "").split(" ").map((n) => n[0]).join("").slice(0, 2);
 }
 
 export default function DoctorDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
-  const doctor = doctors.find((d) => d.id === id);
+  const { isAuthenticated, user } = useAuth();
+  
+  const [doctor, setDoctor] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [booking, setBooking] = useState(false);
+
+  useEffect(() => {
+    axios.get(`/api/doctors/${id}`)
+      .then(res => {
+        setDoctor({
+          ...res.data,
+          name: res.data.userId?.name || 'Unknown',
+          email: res.data.userId?.email
+        });
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container py-20 flex justify-center items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
 
   if (!doctor) {
     return <Layout><div className="container py-20 text-center text-muted-foreground">Doctor not found.</div></Layout>;
   }
 
-  const daySlots = doctor.availability.find((a) => a.day === selectedDay)?.slots || [];
+  const daySlots = doctor.availability?.find((a) => a.day === selectedDay)?.slots || [];
 
-  const handleBook = () => {
+  const handleBook = async () => {
     if (!isAuthenticated) {
       toast.error("Please log in to book an appointment");
       navigate("/login");
@@ -36,8 +66,26 @@ export default function DoctorDetailPage() {
       toast.error("Please select a day and time slot");
       return;
     }
-    toast.success(`Appointment booked with ${doctor.name} on ${selectedDay} at ${selectedSlot}!`);
-    navigate("/my-appointments");
+    
+    setBooking(true);
+    try {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      
+      const res = await axios.post('/api/appointments/book', { 
+        doctorId: doctor._id, 
+        date: selectedDay, 
+        time: selectedSlot 
+      }, config);
+      
+      const checkoutRes = await axios.post('/api/payments/create-checkout-session', { 
+        appointmentId: res.data._id 
+      }, config);
+      
+      window.location.href = checkoutRes.data.url;
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Booking failed");
+      setBooking(false);
+    }
   };
 
   return (
@@ -94,7 +142,7 @@ export default function DoctorDetailPage() {
                 <div className="mb-4">
                   <p className="text-sm text-muted-foreground mb-2">Select a day</p>
                   <div className="flex flex-wrap gap-2">
-                    {doctor.availability.map((a) =>
+                    {doctor.availability && doctor.availability.length > 0 ? doctor.availability.map((a) =>
                     <button
                       key={a.day}
                       onClick={() => {setSelectedDay(a.day);setSelectedSlot(null);}}
@@ -103,9 +151,12 @@ export default function DoctorDetailPage() {
                       "bg-primary text-primary-foreground shadow-sm" :
                       "bg-muted text-muted-foreground hover:bg-muted/80"}`
                       }>
-                      
                         {a.day}
                       </button>
+                    ) : (
+                      <div className="w-full p-4 bg-muted/50 rounded-xl border border-dashed text-center">
+                        <p className="text-sm text-muted-foreground italic">This doctor has not initialized their scheduling hours yet.</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -124,7 +175,6 @@ export default function DoctorDetailPage() {
                       "bg-primary text-primary-foreground shadow-sm" :
                       "bg-muted text-muted-foreground hover:bg-muted/80"}`
                       }>
-                      
                           {slot}
                         </button>
                     )}
@@ -134,13 +184,14 @@ export default function DoctorDetailPage() {
 
                 {/* Confirm */}
                 {selectedDay && selectedSlot &&
-                <div className="mt-6 flex items-center gap-4 animate-reveal-up">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <CheckCircle2 className="h-4 w-4 text-success" />
-                      {selectedDay} at {selectedSlot}
+                <div className="mt-6 flex flex-col gap-4 animate-reveal-up border p-4 rounded-xl bg-muted/30">
+                    <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                      Appointment summary: {selectedDay} at {selectedSlot}
                     </div>
-                    <Button onClick={handleBook} variant="hero" size="lg">
-                      Confirm & Pay ${doctor.fees}
+                    <Button onClick={handleBook} disabled={booking} variant="hero" size="lg" className="w-full sm:w-auto">
+                      {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      {booking ? "Redirecting to Stripe..." : `Confirm & Pay $${doctor.fees}`}
                     </Button>
                   </div>
                 }
@@ -149,6 +200,6 @@ export default function DoctorDetailPage() {
           </div>
         </ScrollReveal>
       </div>
-    </Layout>);
-
+    </Layout>
+  );
 }
